@@ -8,11 +8,20 @@
 * Resources are exposed as REST API's. Identify the nouns/resources to expose them as API's.
 * Endpoint URL should be plural of resource name
   * GET /topics           
-   * Response Code:  200
-  * GET /topics/<id>      Response Code:  200
-  * POST /topics          Response Code:  201
-  * PUT /topics/<id>      Response Code:  200
-  * DELETE /topics/<id>   Response Code:  204
+    * Response Code:  200
+  * GET /topics/<id>      
+    * Response Code:  200
+  * POST /topics          
+    * Response Code:  201
+  * PUT /topics/<id>      
+    * Response Code:  200
+  * DELETE /topics/<id>   
+    * Response Code:  204
+ 
+* You can application.properties to customize the spring defalut behavior
+ 
+ # JPA and spring-data-jpa
+ * 
   
   
   
