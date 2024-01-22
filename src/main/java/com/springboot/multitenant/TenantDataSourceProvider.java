@@ -25,6 +25,10 @@ public class TenantDataSourceProvider {
     @Autowired
     private JpaProperties jpaProperties;
 
+    @Bean(name = "defaultDatasource")
+    public DataSource defaultDatasource() {
+        return createDataSourceForTenant(new TenantDetails("acrsmasterdb", "jdbc:postgresql://localhost:5432/acrsmasterdb", "postgres", "password1"));
+    }
     @Bean
     public Map<String, DataSource> dataSources() {
         // Fetch tenant information from API and create DataSources dynamically
@@ -57,30 +61,5 @@ public class TenantDataSourceProvider {
         dataSource.setPassword(tenantDetails.getPassword());
         return dataSource;
     }
-
-//    @Bean
-//    public Map<String, LocalContainerEntityManagerFactoryBean> entityManagerFactory(
-//            EntityManagerFactoryBuilder builder,
-//            @Qualifier("defaultDataSource") DataSource defaultDataSource,
-//            @Qualifier("dataSources") Map<String, DataSource> dataSources) {
-//        Map<String, LocalContainerEntityManagerFactoryBean> entityManagers = new HashMap<>();
-//
-//        for (Map.Entry<String, DataSource> entry : dataSources.entrySet()) {
-//            String tenantId = entry.getKey();
-//            DataSource dataSource = entry.getValue();
-//
-//            LocalContainerEntityManagerFactoryBean entityManagerFactory =
-//                    builder
-//                            .dataSource(dataSource)
-//                            .packages("com.springboot")
-//                            .properties(jpaProperties.getProperties())
-//                            .persistenceUnit(tenantId)
-//                            .build();
-//
-//            entityManagers.put(tenantId, entityManagerFactory);
-//        }
-//
-//        return entityManagers;
-//    }
 }
 
