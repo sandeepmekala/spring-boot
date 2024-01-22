@@ -10,14 +10,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/employees")
+@RequestMapping("/api/employees")
 public class EmployeeController {
     @Autowired
     private EmployeeService employeeService;
 
     @GetMapping("/hello")
-    public String hello(){
-        return "hello "+System.currentTimeMillis();
+        public String hello(){
+            return "hello "+System.currentTimeMillis();
     }
 
     // Endpoint to get all employees
