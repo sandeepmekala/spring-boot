@@ -16,14 +16,15 @@ public class EmployeeController {
     private EmployeeService employeeService;
 
     @GetMapping("/hello")
-        public String hello(){
-            return "hello "+System.currentTimeMillis();
+    public String hello() {
+        return "hello " + System.currentTimeMillis();
     }
 
     // Endpoint to get all employees
     @GetMapping
     public ResponseEntity<List<Employee>> getAllEmployees() {
-        List<Employee> employees = employeeService.getAllEmployees();
+        List<Employee> employees =
+                employeeService.getAllEmployees();
         return new ResponseEntity<>(employees, HttpStatus.OK);
     }
 
@@ -47,8 +48,7 @@ public class EmployeeController {
 
     // Endpoint to update an existing employee
     @PutMapping("/{employeeId}")
-    public ResponseEntity<Employee> updateEmployee(
-            @PathVariable Long employeeId, @RequestBody Employee updatedEmployee) {
+    public ResponseEntity<Employee> updateEmployee(@PathVariable Long employeeId, @RequestBody Employee updatedEmployee) {
         Employee employee = employeeService.updateEmployee(employeeId, updatedEmployee);
         if (employee != null) {
             return new ResponseEntity<>(employee, HttpStatus.OK);
@@ -57,6 +57,8 @@ public class EmployeeController {
         }
     }
 
+    // Endpoint to delete an employee by ID
+    // Endpoint to delete an employee by ID
     // Endpoint to delete an employee by ID
     @DeleteMapping("/{employeeId}")
     public ResponseEntity<Void> deleteEmployee(@PathVariable Long employeeId) {

@@ -2,20 +2,16 @@ package com.springboot.multitenant;
 
 import com.springboot.model.TenantDetails;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
-import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
 import javax.sql.DataSource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Configuration
 public class TenantDataSourceProvider {
@@ -29,6 +25,7 @@ public class TenantDataSourceProvider {
     public DataSource defaultDatasource() {
         return createDataSourceForTenant(new TenantDetails("acrsmasterdb", "jdbc:postgresql://localhost:5432/acrsmasterdb", "postgres", "password1"));
     }
+
     @Bean
     public Map<String, DataSource> dataSources() {
         // Fetch tenant information from API and create DataSources dynamically
