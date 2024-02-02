@@ -22,9 +22,6 @@ import java.util.Map;
 @Configuration
 public class CloudConfiguration {
 
-    @Autowired
-    public JpaProperties jpaProperties;
-
     @Bean
     public JpaVendorAdapter jpaVendorAdapter() {
 //        return new HibernateJpaVendorAdapter();
