@@ -6,31 +6,34 @@ import java.io.*;
 import java.util.*;
 
 /**
- * Simplified Excel writer for Simulateur UVC processing
+ * Ultra-simplified Excel writer - no style/formula processing
+ * Lets Excel handle formatting automatically
  */
-public class OptimizedExcelWriter {
+public class SimplifiedExcelWriter {
 
     private static final XMLInputFactory XML_INPUT_FACTORY = XMLInputFactory.newInstance();
     private static final XMLOutputFactory XML_OUTPUT_FACTORY = XMLOutputFactory.newInstance();
     private static final int BUFFER_SIZE = 8192;
 
     /**
-     * Main method to fill Excel template with data
+     * Simple method to fill Excel template with data
      */
     public static void fillExcelTemplate(File template, File output, List<Map<String, Object>> data,
             String worksheetName, int headerRowNumber) throws Exception {
 
+        System.out.println("📋 Using simplified Excel writer (no style processing)");
+        
         // Copy template to preserve original
         copyTemplate(template, output);
 
-        // Process the Excel file
+        // Process the Excel file with simple data writing
         try (OPCPackage pkg = OPCPackage.open(output, PackageAccess.READ_WRITE)) {
             PackagePart sheetPart = findWorksheet(pkg, worksheetName);
             if (sheetPart == null) {
                 throw new RuntimeException("Worksheet '" + worksheetName + "' not found!");
             }
 
-            processSheet(sheetPart, data, headerRowNumber);
+            writeSimpleData(sheetPart, data, headerRowNumber);
             removeCalculationChain(pkg);
         }
     }
@@ -39,8 +42,7 @@ public class OptimizedExcelWriter {
      * Copy template file to output location
      */
     private static void copyTemplate(File template, File output) throws IOException {
-        System.out
-                .println("📋 Copying template to preserve original: " + template.getName() + " -> " + output.getName());
+        System.out.println("📋 Copying template: " + template.getName() + " -> " + output.getName());
 
         File outputDir = output.getParentFile();
         if (outputDir != null && !outputDir.exists()) {
@@ -48,7 +50,7 @@ public class OptimizedExcelWriter {
         }
 
         try (InputStream in = new FileInputStream(template);
-                OutputStream out = new FileOutputStream(output)) {
+             OutputStream out = new FileOutputStream(output)) {
 
             byte[] buffer = new byte[BUFFER_SIZE];
             int bytesRead;
@@ -57,48 +59,29 @@ public class OptimizedExcelWriter {
             }
         }
 
-        System.out.println("✅ Template copied successfully. Original template preserved.");
+        System.out.println("✅ Template copied successfully");
     }
 
     /**
-     * Find worksheet by name
+     * Find worksheet by name (simplified)
      */
     private static PackagePart findWorksheet(OPCPackage pkg, String worksheetName) throws Exception {
-        Map<String, PackagePart> worksheetMap = getWorksheetMapping(pkg);
-
-        PackagePart targetPart = worksheetMap.get(worksheetName);
-        if (targetPart != null) {
-            System.out.println("✅ Found worksheet '" + worksheetName + "' at: " + targetPart.getPartName().getName());
-        } else {
-            System.out.println("❌ Worksheet '" + worksheetName + "' not found!");
-            System.out.println("Available worksheets: " + worksheetMap.keySet());
-        }
-
-        return targetPart;
-    }
-
-    /**
-     * Create mapping from worksheet names to their parts
-     */
-    private static Map<String, PackagePart> getWorksheetMapping(OPCPackage pkg) throws Exception {
-        Map<String, PackagePart> mapping = new LinkedHashMap<>();
-
+        // Get worksheet names
         List<String> worksheetNames = getWorksheetNames(pkg);
         List<PackagePart> worksheetParts = getWorksheetParts(pkg);
 
-        System.out.println("🔍 Mapping worksheets:");
-        System.out.println("  Worksheet names from workbook.xml: " + worksheetNames);
-        System.out.println("  Available worksheet files: " + worksheetParts.size());
+        System.out.println("🔍 Looking for worksheet: " + worksheetName);
+        System.out.println("📋 Available worksheets: " + worksheetNames);
 
         int minSize = Math.min(worksheetNames.size(), worksheetParts.size());
         for (int i = 0; i < minSize; i++) {
-            String name = worksheetNames.get(i);
-            PackagePart part = worksheetParts.get(i);
-            mapping.put(name, part);
-            System.out.println("  ✅ " + name + " -> " + part.getPartName().getName());
+            if (worksheetName.equals(worksheetNames.get(i))) {
+                System.out.println("✅ Found worksheet: " + worksheetName);
+                return worksheetParts.get(i);
+            }
         }
 
-        return mapping;
+        return null;
     }
 
     /**
@@ -156,7 +139,7 @@ public class OptimizedExcelWriter {
                         int sheetNumber = Integer.parseInt(numberStr);
                         sortedParts.put(sheetNumber, part);
                     } catch (NumberFormatException e) {
-                        System.out.println("⚠️ Could not parse sheet number from: " + partName);
+                        // Skip invalid sheet names
                     }
                 }
             }
@@ -169,132 +152,22 @@ public class OptimizedExcelWriter {
     }
 
     /**
-     * Process the worksheet with data
+     * Write data to worksheet (ultra-simplified)
      */
-    private static void processSheet(PackagePart sheetPart, List<Map<String, Object>> data, int headerRowNumber)
-            throws Exception {
+    private static void writeSimpleData(PackagePart sheetPart, List<Map<String, Object>> data, int headerRowNumber) throws Exception {
         byte[] sheetBytes = readSheetBytes(sheetPart);
 
-        Map<String, String> formulaMap = extractFormulas(sheetBytes, headerRowNumber);
-        Map<String, String> styleMap = extractCellStyles(sheetBytes, headerRowNumber);
-
         ByteArrayOutputStream updatedSheet = new ByteArrayOutputStream();
-        writeSheetData(sheetBytes, updatedSheet, data, formulaMap, styleMap, headerRowNumber);
+        writeSheetWithData(sheetBytes, updatedSheet, data, headerRowNumber);
 
         writeSheetBytes(sheetPart, updatedSheet.toByteArray());
     }
 
     /**
-     * Extract formulas and styles from the first data row
+     * Write sheet data (simplified XML processing)
      */
-    private static Map<String, String> extractFormulas(byte[] sheetBytes, int headerRowNumber) throws Exception {
-        Map<String, String> formulaMap = new HashMap<>();
-        int firstDataRowNumber = headerRowNumber + 1;
-        String firstDataRowStr = String.valueOf(firstDataRowNumber);
-
-        try (InputStream sheetIn = new ByteArrayInputStream(sheetBytes)) {
-            XMLStreamReader reader = XML_INPUT_FACTORY.createXMLStreamReader(sheetIn);
-
-            String currentCellRef = null;
-            boolean inFirstDataRow = false;
-
-            while (reader.hasNext()) {
-                int event = reader.next();
-
-                if (event == XMLStreamConstants.START_ELEMENT) {
-                    String localName = reader.getLocalName();
-
-                    if ("row".equals(localName)) {
-                        String rowNum = reader.getAttributeValue(null, "r");
-                        if (firstDataRowStr.equals(rowNum)) {
-                            inFirstDataRow = true;
-                        } else if (inFirstDataRow) {
-                            System.out
-                                    .println("DEBUG: Finished processing first data row, stopping formula extraction");
-                            break;
-                        }
-                    } else if ("c".equals(localName) && inFirstDataRow) {
-                        currentCellRef = reader.getAttributeValue(null, "r");
-                    } else if ("f".equals(localName) && currentCellRef != null && inFirstDataRow) {
-                        String formula = reader.getElementText();
-                        if (formula != null && !formula.trim().isEmpty()) {
-                            String column = currentCellRef.replaceAll("\\d+", "");
-                            formulaMap.put(column, formula);
-                            System.out.println("DEBUG: Extracted formula from column " + column + ": " + formula);
-                        }
-                    }
-                } else if (event == XMLStreamConstants.END_ELEMENT) {
-                    if ("c".equals(reader.getLocalName())) {
-                        currentCellRef = null;
-                    } else if ("row".equals(reader.getLocalName()) && inFirstDataRow) {
-                        inFirstDataRow = false;
-                    }
-                }
-            }
-            reader.close();
-        }
-
-        System.out.println("DEBUG: Total formulas extracted from first data row: " + formulaMap.size());
-        return formulaMap;
-    }
-
-    /**
-     * Extract cell styles from the first data row to preserve formatting
-     */
-    private static Map<String, String> extractCellStyles(byte[] sheetBytes, int headerRowNumber) throws Exception {
-        Map<String, String> styleMap = new HashMap<>();
-        int firstDataRowNumber = headerRowNumber + 1;
-        String firstDataRowStr = String.valueOf(firstDataRowNumber);
-
-        try (InputStream sheetIn = new ByteArrayInputStream(sheetBytes)) {
-            XMLStreamReader reader = XML_INPUT_FACTORY.createXMLStreamReader(sheetIn);
-
-            boolean inFirstDataRow = false;
-
-            while (reader.hasNext()) {
-                int event = reader.next();
-
-                if (event == XMLStreamConstants.START_ELEMENT) {
-                    String localName = reader.getLocalName();
-
-                    if ("row".equals(localName)) {
-                        String rowNum = reader.getAttributeValue(null, "r");
-                        if (firstDataRowStr.equals(rowNum)) {
-                            inFirstDataRow = true;
-                        } else if (inFirstDataRow) {
-                            System.out.println("DEBUG: Finished extracting cell styles from first data row");
-                            break;
-                        }
-                    } else if ("c".equals(localName) && inFirstDataRow) {
-                        String cellRef = reader.getAttributeValue(null, "r");
-                        String styleIndex = reader.getAttributeValue(null, "s");
-
-                        if (cellRef != null && styleIndex != null) {
-                            String column = cellRef.replaceAll("\\d+", "");
-                            styleMap.put(column, styleIndex);
-                            System.out.println(
-                                    "DEBUG: Extracted style for column " + column + ": s=\"" + styleIndex + "\"");
-                        }
-                    }
-                } else if (event == XMLStreamConstants.END_ELEMENT) {
-                    if ("row".equals(reader.getLocalName()) && inFirstDataRow) {
-                        inFirstDataRow = false;
-                    }
-                }
-            }
-            reader.close();
-        }
-
-        System.out.println("DEBUG: Total cell styles extracted: " + styleMap.size());
-        return styleMap;
-    }
-
-    /**
-     * Write sheet data with template preservation
-     */
-    private static void writeSheetData(byte[] sheetXmlBytes, OutputStream sheetOut,
-            List<Map<String, Object>> data, Map<String, String> formulaMap, Map<String, String> styleMap,
-            int headerRowNumber) throws Exception {
+    private static void writeSheetWithData(byte[] sheetXmlBytes, OutputStream sheetOut,
+            List<Map<String, Object>> data, int headerRowNumber) throws Exception {
 
         try (InputStream sheetIn = new ByteArrayInputStream(sheetXmlBytes)) {
             XMLStreamReader reader = XML_INPUT_FACTORY.createXMLStreamReader(sheetIn);
@@ -311,7 +184,13 @@ public class OptimizedExcelWriter {
                     if ("sheetData".equals(localName)) {
                         inSheetData = true;
                         copyElement(writer, reader);
-                        writeCompleteSheetData(writer, sheetXmlBytes, data, formulaMap, styleMap, headerRowNumber);
+                        
+                        // Copy template rows up to header
+                        copyTemplateRows(writer, sheetXmlBytes, headerRowNumber);
+                        
+                        // Write simple data rows
+                        writeSimpleDataRows(writer, data, headerRowNumber + 1);
+                        
                         skipToEndElement(reader, "sheetData");
                         writer.writeEndElement();
                         inSheetData = false;
@@ -332,24 +211,9 @@ public class OptimizedExcelWriter {
     }
 
     /**
-     * Write complete sheet data including template rows and new data
-     */
-    private static void writeCompleteSheetData(XMLStreamWriter writer, byte[] sheetBytes,
-            List<Map<String, Object>> data, Map<String, String> formulaMap, Map<String, String> styleMap,
-            int headerRowNumber) throws Exception {
-
-        // Copy template rows up to and including header
-        copyTemplateRows(writer, sheetBytes, headerRowNumber);
-
-        // Write data rows starting after header
-        writeDataRows(writer, data, formulaMap, styleMap, headerRowNumber + 1);
-    }
-
-    /**
      * Copy template rows up to and including header row
      */
-    private static void copyTemplateRows(XMLStreamWriter writer, byte[] sheetBytes, int headerRowNumber)
-            throws Exception {
+    private static void copyTemplateRows(XMLStreamWriter writer, byte[] sheetBytes, int headerRowNumber) throws Exception {
         try (InputStream sheetIn = new ByteArrayInputStream(sheetBytes)) {
             XMLStreamReader reader = XML_INPUT_FACTORY.createXMLStreamReader(sheetIn);
 
@@ -388,71 +252,59 @@ public class OptimizedExcelWriter {
     }
 
     /**
-     * Write data rows with formulas and preserved cell styles
+     * Write data rows (ultra-simplified - no styles, no formulas)
      */
-    private static void writeDataRows(XMLStreamWriter writer, List<Map<String, Object>> data,
-            Map<String, String> formulaMap, Map<String, String> styleMap, int startRow) throws XMLStreamException {
-
+    private static void writeSimpleDataRows(XMLStreamWriter writer, List<Map<String, Object>> data, int startRow) throws XMLStreamException {
+        System.out.println("📝 Writing " + data.size() + " data rows (simplified mode)");
+        
         int rowNum = startRow;
-
-        // Get all columns from data and formulas
-        Set<String> allColumns = new LinkedHashSet<>();
-        if (!data.isEmpty()) {
-            allColumns.addAll(data.get(0).keySet());
-        }
-        allColumns.addAll(formulaMap.keySet());
-
-        List<String> columnOrder = new ArrayList<>(allColumns);
 
         for (Map<String, Object> row : data) {
             writer.writeStartElement("row");
             writer.writeAttribute("r", String.valueOf(rowNum));
 
-            for (String columnName : columnOrder) {
-                String cellRef = columnName + rowNum;
+            // Get all columns from data
+            List<String> columns = new ArrayList<>(row.keySet());
+            
+            for (String columnName : columns) {
+                Object value = row.get(columnName);
+                if (value != null) {
+                    String cellRef = columnName + rowNum;
 
-                writer.writeStartElement("c");
-                writer.writeAttribute("r", cellRef);
+                    writer.writeStartElement("c");
+                    writer.writeAttribute("r", cellRef);
 
-                // Apply original cell style to preserve formatting (like Text format for column
-                // D)
-                String styleIndex = styleMap.get(columnName);
-                if (styleIndex != null) {
-                    writer.writeAttribute("s", styleIndex);
-                    System.out.println("DEBUG: Applied style s=\"" + styleIndex + "\" to cell " + cellRef);
-                }
-
-                // Check for formula first
-                String formula = getFormulaForCell(formulaMap, columnName, rowNum);
-                if (formula != null) {
-                    writer.writeStartElement("f");
-                    writer.writeCharacters(formula);
-                    writer.writeEndElement();
-                } else if (row.containsKey(columnName)) {
-                    Object value = row.get(columnName);
-
+                    // Simple data writing - let Excel handle formatting
                     if (value instanceof String) {
                         writer.writeAttribute("t", "str");
                         writer.writeStartElement("v");
                         writer.writeCharacters(value.toString());
                         writer.writeEndElement();
-                    } else if (value != null) {
+                    } else if (value instanceof Number) {
+                        writer.writeStartElement("v");
+                        writer.writeCharacters(value.toString());
+                        writer.writeEndElement();
+                    } else {
+                        // Convert everything else to string
+                        writer.writeAttribute("t", "str");
                         writer.writeStartElement("v");
                         writer.writeCharacters(value.toString());
                         writer.writeEndElement();
                     }
-                }
 
-                writer.writeEndElement();
+                    writer.writeEndElement();
+                }
             }
 
             writer.writeEndElement();
             rowNum++;
         }
+        
+        System.out.println("✅ Data rows written successfully");
     }
 
     /**
-     * Helper methods
+     * Helper methods (simplified)
      */
     private static byte[] readSheetBytes(PackagePart sheetPart) throws IOException {
         try (InputStream in = sheetPart.getInputStream()) {
@@ -559,13 +411,5 @@ public class OptimizedExcelWriter {
                 writer.writeEndDocument();
                 break;
         }
-    }
-
-    private static String getFormulaForCell(Map<String, String> formulaMap, String column, int row) {
-        String formula = formulaMap.get(column);
-        if (formula != null) {
-            return formula.replaceAll("\\b([A-Z]+)(\\d+)\\b", "$1" + row);
-        }
-        return null;
     }
 }

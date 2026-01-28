@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "sourceFile": "gov_template.xlsm",
+    "worksheet": "Simulateur UVC",
+    "extractedAt": "2026-01-27T23:01:14.937206",
+    "totalRows": 6,
+    "startRow": 11,
+    "columnRange": "A-AX"
+  },
+  "data": [
+    {
+      "B": "RDP_GF_FG_HAP_001",
+      "C": "12 Glasses of Happy Apples",
+      "D": "012502",
+      "F": 26.0,
+      "G": 0.0,
+      "I": 151.2,
+      "J": 198.0,
+      "L": 4006.8,
+      "W": 18.0,
+      "AD": "Non",
+      "AU": "Emballages de groupement",
+      "AX": 100000.0
+    },
+    {
+      "B": "RDP_GF_FG_YOG_001",
+      "C": "Yoghurt 3.8% Strawberry",
+      "D": "034202",
+      "F": 2.0,
+      "G": 0.0,
+      "I": 1.4,
+      "Y": 4.17,
+      "AD": "Non",
+      "AX": 100000.0
+    },
+    {
+      "B": "RDP_PC_FG_SOA_001",
+      "C": "15 Soaps with Flavor",
+      "D": "046502",
+      "F": 2.0,
+      "G": 0.0,
+      "J": 0.5,
+      "Q": 10.2,
+      "V": 3.2,
+      "AD": "Oui",
+      "AX": 1.5E7
+    },
+    {
+      "B": "RDP_GF_FG_MCA_001",
+      "C": "12 Bottles of Mocha Cappuccino",
+      "D": "010303",
+      "F": 3.0,
+      "G": 0.0,
+      "I": 11.1,
+      "L": 241.2,
+      "S": 125.0,
+      "W": 0.3,
+      "AD": "Non",
+      "AU": "Emballages de groupement",
+      "AX": 280800.0
+    },
+    {
+      "B": "RDP_GF_FG_WAT_001",
+      "C": "6 Pack Water",
+      "D": "023200",
+      "F": 13.0,
+      "G": 0.0,
+      "J": 5.0,
+      "M": 151.2,
+      "T": 10.927,
+      "W": 20.0,
+      "Y": 6.75,
+      "AD": "Oui",
+      "AU": "Cumul : 10% Emballages de groupement + 10% Récipients en matériau majoritaire plastique pour boissons à usage unique, dont les briques, de contenance inférieure ou égale à 0,5 L",
+      "AX": 13000.0
+    },
+    {
+      "B": "RDP_GF_FG_CHO_001",
+      "C": "Cholocate Cookies",
+      "D": "010602",
+      "F": 6.0,
+      "G": 0.0,
+      "J": 80.0,
+      "S": 20.0,
+      "V": 2.0,
+      "W": 1.6,
+      "AD": "Non",
+      "AU": "Emballages de groupement",
+      "AW": "Plastique rigide + noir de carbone",
+      "AX": 48000.0
+    }
+  ]
+}
